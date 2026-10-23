@@ -1,0 +1,27 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.10.11, pytest-9.1.1, pluggy-1.7.0
+rootdir: /Users/mingze/obsidian/AI infra/论文/2026/9-PuzzleKV/puzzlekv
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 21 items
+
+tests/test_dense_attention.py s                                          [  4%]
+tests/test_incremental_cache.py ss                                       [ 14%]
+tests/test_integration.py ss                                             [ 23%]
+tests/test_lowrank_attention.py sss                                      [ 38%]
+tests/test_mixed_pages.py s                                              [ 42%]
+tests/test_svd_reconstruction.py sss                                     [ 57%]
+tests/test_triton_parity.py sssssssss                                    [100%]
+
+- generated xml file: /Users/mingze/obsidian/AI infra/论文/2026/9-PuzzleKV/puzzlekv/results/pytest-local.xml -
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_dense_attention.py:4: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [1] tests/test_incremental_cache.py:4: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [1] tests/test_incremental_cache.py:17: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [1] tests/test_integration.py:5: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [1] tests/test_integration.py:9: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [3] tests/test_lowrank_attention.py:6: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [1] tests/test_mixed_pages.py:5: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [3] tests/test_svd_reconstruction.py:5: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+SKIPPED [9] tests/test_triton_parity.py:6: NOT RUN: CUDA GPU required; CPU execution is not a validation target
+============================= 21 skipped in 0.02s ==============================

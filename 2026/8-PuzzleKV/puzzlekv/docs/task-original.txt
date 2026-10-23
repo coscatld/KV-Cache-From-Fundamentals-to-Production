@@ -1,0 +1,327 @@
+# 任务：使用 PyTorch + Triton 实现 PuzzleKV 页级低秩 KV Cache 压缩
+
+## 一、项目目标
+
+请参考论文《PuzzleKV: Page-Wise Low-Rank Decomposition for KV Cache Compression》实现一个可运行、可测试、可进行性能对比的研究原型。
+
+论文地址：
+https://arxiv.org/html/2608.23843v1
+
+核心目标：
+1. 将每层、每个 KV Head 的 KV Cache 按固定长度划分为逻辑页。
+2. 对满足压缩条件的页分别执行 Key 和 Value 的截断 SVD。
+3. 保留近期窗口及必要的 attention sink 区域为稠密 KV。
+4. 实现同时支持稠密页和低秩页的 Attention 计算，不必重建全部历史 KV。
+5. 在自回归解码过程中增量压缩新满足条件的页。
+6. 使用 PyTorch 实现正确性基线，使用 Triton 实现适合融合和加速的 GPU 算子。
+7. 提供单元测试、数值误差分析、性能测试与完整文档。
+
+这是研究复现任务。请明确区分论文已有设计与自行选择的工程实现，不得把未经验证的优化宣称为论文原始实现。
+
+## 二、技术栈与约束
+
+- Python、PyTorch、Triton。
+- CUDA GPU 优先；先检查当前机器是否支持 CUDA、Triton 和相应的数据类型。
+- 使用 Hugging Face Transformers 接入模型，但核心压缩算法应与模型加载解耦。
+- 支持 FP16、BF16；数值验证可使用 FP32。
+- 首先支持 batch size = 1、标准 MHA/GQA 兼容的张量布局。
+- 不得假设 Mac 的 Apple Silicon 支持 NVIDIA CUDA。若当前环境没有 CUDA，先完成 PyTorch CPU 参考实现，并将 Triton GPU 测试标记为待在 CUDA 环境运行。
+- 不允许为了让测试通过而跳过核心测试、伪造性能数据或隐藏误差。
+- 固定随机种子，记录软件版本、硬件型号及实验参数。
+
+## 三、模块设计
+
+请创建以下模块，可根据仓库现有结构合理调整。
+
+### 1. `src/puzzlekv/config.py`
+
+定义配置：
+- page_size
+- key_rank
+- value_rank
+- sink_size
+- recent_window_size
+- compression_enabled
+- compute_dtype
+- device
+- numerical_tolerance
+
+验证参数合法性，特别处理页长度不足、rank 超过矩阵有效秩、序列长度不足以及最后一个不完整页。
+
+### 2. `src/puzzlekv/decomposition.py`
+
+使用 PyTorch 实现参考版本。
+
+输入：
+- 单页 Key：`[P, D]`
+- 单页 Value：`[P, Dv]`
+
+实现：
+- Key 和 Value 独立进行截断 SVD。
+- 返回低秩因子及必要的形状、精度信息。
+- 支持按实际存储预算选择 rank。
+- 提供重建函数，仅用于测试与基准，不作为正式 Attention 的必经步骤。
+
+定义统一的因子约定。例如：
+
+`X ≈ A @ B`
+
+其中：
+- `A: [P, r]`
+- `B: [r, D]`
+
+请避免不必要的转置、重复分配及不连续张量导致的隐性开销。
+
+先用 `torch.linalg.svd` 实现正确性版本，再评估 `torch.linalg.svd_lowrank` 或其他适合的分解实现。不得未经精度和性能测试就替换算法。
+
+### 3. `src/puzzlekv/cache.py`
+
+实现 KV Cache 管理器。
+
+至少支持：
+- 存储稠密页。
+- 存储低秩 Key/Value 因子。
+- 记录每页状态、Token 区间、rank、dtype 和逻辑位置。
+- 维护 attention sink 和近期稠密窗口。
+- 新 Token 追加。
+- 满足条件的完整历史页增量压缩。
+- 最后一个不完整页继续以稠密形式保存。
+- 记录压缩前后实际存储量。
+
+必须保证 RoPE 位置、Token 顺序、因果掩码和 GQA Head 映射正确。压缩页后不能改变历史 Token 的逻辑位置。
+
+### 4. `src/puzzlekv/attention_reference.py`
+
+使用 PyTorch 实现正确性基线。
+
+支持：
+- 仅稠密 KV 的标准 Attention。
+- 低秩页与稠密页混合 Attention。
+- 单个 query 的解码 Attention。
+- 多 query 的测试路径。
+- 数值稳定的 Softmax。
+- 正确处理 causal mask、逻辑位置和不同页状态。
+
+低秩页必须直接计算 Attention，不得在正式计算路径中将所有低秩页先重建为完整 KV。
+
+推导并实现对应公式，区分 Key 与 Value 的低秩因子。
+
+若某页：
+
+`K_p ≈ A_k @ B_k`
+
+`V_p ≈ A_v @ B_v`
+
+则对 query `q`：
+
+`q @ K_p.T ≈ q @ B_k.T @ A_k.T`
+
+得到该页的 logits 后，必须与其他页面的 logits 在同一个 Softmax 归一化过程中计算。不能先对每页独立 Softmax，再简单拼接输出。
+
+Value 聚合应直接利用 `A_v` 和 `B_v` 计算，避免重建完整的 `V_p`。
+
+如果采用分块在线 Softmax，请明确推导并验证数值等价性。
+
+### 5. `src/puzzlekv/triton_kernels.py`
+
+实现 Triton GPU 优化版本。
+
+请按照依赖关系逐步开发，不要一开始实现复杂的全功能融合 Kernel。
+
+优先级：
+
+**Kernel A：低秩 Attention Logits**
+
+输入 query 和低秩 Key 因子，直接计算低秩页的 Attention logits。
+
+**Kernel B：低秩 Value 聚合**
+
+根据已经计算的 Attention 权重与低秩 Value 因子，完成页内加权聚合。
+
+**Kernel C：混合页面 Attention**
+
+在可行时融合 logits 计算、在线 Softmax 和 Value 聚合，直接处理稠密页与低秩页。
+
+要求：
+- 正确处理页长度、rank、head_dim 的边界。
+- 使用 mask 防止越界访问。
+- 根据实际布局选择合适的 `num_warps` 和 tile 配置。
+- 不得假设所有维度都是 2 的幂。
+- 不得对 Softmax 使用不稳定的直接指数求和。
+- 不得通过复制完整 KV 到临时缓冲区来冒充低秩直接计算。
+- 保留可回退到 PyTorch 的实现。
+- Triton Kernel 必须与参考实现逐项进行数值比对。
+
+对于 SVD，请先使用 PyTorch 现有实现。只有经过分析、确认分解过程是主要瓶颈，并且存在合理的 GPU 算法后，才考虑专门优化。不要把复杂 SVD Kernel 当作第一阶段目标。
+
+### 6. `src/puzzlekv/integration.py`
+
+封装对 Hugging Face 模型的接入接口。
+
+目标：
+- 先实现独立的 KV Cache 实验接口。
+- 再尝试接入模型实际推理流程。
+- 记录 prefill 和 decode 阶段的 KV。
+- 对比压缩开启与关闭时的输出。
+- 处理不同 Transformers 版本的 Cache API 差异。
+
+不要一开始修改整个 Transformers 源码。优先采用清晰的 Adapter 或最小化 Hook。若必须修改模型 Attention 实现，明确记录改动位置与原因。
+
+如果某些模型结构暂时不支持，请提供最小可运行的自定义 Attention 测试模型，并明确标注支持范围。
+
+## 四、必须执行的正确性测试
+
+创建 `tests/`，至少包含：
+
+1. `test_svd_reconstruction.py`
+   - 验证截断 SVD 的矩阵形状和重建误差。
+   - 比较重建误差与合理基线。
+   - 覆盖不同页长度和 rank。
+
+2. `test_dense_attention.py`
+   - 比较参考 Attention 与 PyTorch SDPA。
+   - 验证缩放因子、Softmax、mask 和输出形状。
+
+3. `test_lowrank_attention.py`
+   - 比较低秩页直接计算与显式重建后的 Attention。
+   - 分别测试 Key 低秩、Value 低秩、两者同时低秩。
+
+4. `test_mixed_pages.py`
+   - 测试稠密页与低秩页混合。
+   - 验证所有页面共同归一化 Softmax。
+   - 验证页的排列不会影响结果。
+
+5. `test_incremental_cache.py`
+   - 模拟逐 Token 解码。
+   - 验证页填满前后的状态变化。
+   - 验证压缩后 Token 顺序和逻辑位置保持不变。
+
+6. `test_triton_parity.py`
+   - 在 CUDA 可用时比较 Triton 与 PyTorch 输出。
+   - 分别测试 FP32、FP16、BF16（硬件支持时）。
+   - 测试非整齐维度、不同 rank、不同页长度。
+   - 在 CPU 环境中明确报告 GPU 测试未执行，不得伪报通过。
+
+所有测试都必须实际运行，并报告 PASS、FAIL 或 NOT RUN。
+
+## 五、性能评测
+
+创建 `benchmarks/`，分别测量：
+
+1. 单页 SVD 分解耗时。
+2. 批量页面分解耗时。
+3. 低秩页 Attention 耗时。
+4. 混合 Attention 耗时。
+5. 增量压缩耗时。
+6. 每个生成 Token 的 decode latency。
+7. 压缩前后 KV Cache 实际存储字节数。
+8. Kernel 临时显存分配和峰值显存。
+
+对比：
+- Full KV。
+- PyTorch 低秩重建后 Attention（仅作为参考）。
+- PyTorch 直接低秩 Attention。
+- Triton 直接低秩 Attention。
+
+要求：
+- 预热后使用 CUDA Events 或可靠的 GPU 基准测试方法。
+- 正确同步 GPU。
+- 报告中位数及必要的分位数。
+- 分离 prefill、SVD 和 decode 耗时。
+- 记录 page_size、rank、上下文长度、dtype 和硬件。
+- 不得将理论压缩比例直接当作实测显存节省比例。
+- 不得宣称 Triton 更快，除非有可复现的实测数据。
+
+## 六、存储预算与误差分析
+
+请明确区分：
+- Token 数量压缩。
+- KV 特征维度压缩。
+- 数值精度量化。
+
+PuzzleKV 主要通过页级低秩分解减少 KV 表示的存储量，不是简单删除 Token。
+
+计算低秩因子的真实存储量：
+
+`A.numel() * A.element_size() + B.numel() * B.element_size()`
+
+同时统计元数据、稠密 sink、近期窗口以及不完整页。
+
+测试指标至少包括：
+- Key 重建相对误差。
+- Value 重建相对误差。
+- Attention logits 误差。
+- Attention 输出相对误差。
+- Full KV 与压缩 KV 的最终模型输出差异。
+
+注意：SVD 重建误差最小，不等于 Attention 输出误差最小。
+
+## 七、开发阶段
+
+请按阶段执行，每个阶段都要运行测试。
+
+**阶段 1：仓库审计与环境检查**
+- 检查当前工作目录和 Git 状态。
+- 检查 Python、PyTorch、CUDA、GPU、Triton 版本。
+- 检查现有代码与依赖。
+- 给出实现计划和潜在风险。
+- 不覆盖现有用户文件。
+
+**阶段 2：PyTorch 参考实现**
+- 实现截断 SVD。
+- 实现页管理。
+- 实现稠密与低秩混合 Attention。
+- 完成全部可在当前环境运行的 CPU/GPU 正确性测试。
+
+**阶段 3：Triton 算子**
+- 实现低秩 logits。
+- 实现低秩 Value 聚合。
+- 完成 PyTorch/Triton parity 测试。
+- 根据测试结果再决定是否融合。
+
+**阶段 4：增量 KV Cache**
+- 实现页状态管理和增量压缩。
+- 验证自回归解码过程中 KV 的逻辑位置和输出一致性。
+
+**阶段 5：模型接入**
+- 选择一个当前环境可以运行的 Hugging Face 模型。
+- 先验证独立 Attention，再接入实际模型。
+- 如果没有足够显存，使用小模型或短上下文完成验证。
+
+**阶段 6：性能分析与文档**
+- 运行 benchmark。
+- 分析瓶颈。
+- 仅对实测瓶颈实施优化。
+- 输出复现报告和下一步优化建议。
+
+## 八、最终交付
+
+请生成：
+
+1. 完整源代码。
+2. 单元测试和实际运行结果。
+3. PyTorch 与 Triton 的数值一致性报告。
+4. Benchmark 脚本与实测数据。
+5. `README.md`：安装、运行、测试、benchmark 命令。
+6. `docs/architecture.md`：系统架构、张量形状、Attention 数学推导。
+7. `docs/implementation_notes.md`：论文设计与工程实现的区别。
+8. `docs/limitations.md`：未实现部分、已知误差、性能瓶颈与限制。
+9. Git diff 或清晰的文件变更列表。
+
+## 九、执行原则
+
+请直接检查当前仓库并开始实施，不要只输出代码示例或计划。
+
+每完成一个阶段，先运行对应测试，再进入下一阶段。出现错误时先定位根因，不得通过删除测试、降低测试覆盖率或忽略异常来解决。
+
+如果论文中某个细节无法确认，请标记为待核实，并优先保留可验证的参考实现，不要凭空猜测论文算法。
+
+最终必须明确回答：
+- 哪些模块使用 PyTorch。
+- 哪些模块使用 Triton。
+- Triton 相比 PyTorch 的实测加速比是多少。
+- 压缩后实际节省多少显存。
+- Attention 输出误差是多少。
+- 当前实现与论文原方法有哪些差异。
+
+用户后续约束：不参考 CPU 实现，后续上传到 GPU 环境；以 CUDA + Triton 为目标。

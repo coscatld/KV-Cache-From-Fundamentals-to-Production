@@ -1,0 +1,7 @@
+{
+  "backend": "synthetic",
+  "dataset": "data/tasks.json",
+  "seed": 42,
+  "peak_kv_bytes": 80000,
+  "synthetic_turns": 8
+}

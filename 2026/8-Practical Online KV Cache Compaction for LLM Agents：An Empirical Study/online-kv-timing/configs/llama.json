@@ -1,0 +1,13 @@
+{
+  "backend": "llama",
+  "dataset": "data/tasks.json",
+  "seed": 42,
+  "peak_kv_bytes": 268435456,
+  "synthetic_turns": 8,
+  "model": "/path/to/local/llama-model",
+  "revision": "REPLACE_WITH_COMMIT_SHA",
+  "dtype": "float16",
+  "max_turns": 6,
+  "max_new_tokens": 96,
+  "system_prompt": "Use search to answer the question. Output exactly one JSON object on one line per turn: {\"tool\":\"search\",\"query\":\"words\"} or {\"answer\":\"short exact answer\"}. Do not add commentary."
+}

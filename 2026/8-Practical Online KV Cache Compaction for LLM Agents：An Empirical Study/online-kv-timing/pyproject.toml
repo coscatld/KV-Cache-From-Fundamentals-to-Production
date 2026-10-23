@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "online-kv-timing"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["torch>=2.2"]
+[project.optional-dependencies]
+test = ["pytest>=8"]
+model = ["transformers>=4.45,<6"]
+plot = ["matplotlib>=3.7"]
+[project.scripts]
+online-kv = "online_kv.experiments:main"
+[tool.pytest.ini_options]
+pythonpath = ["src"]

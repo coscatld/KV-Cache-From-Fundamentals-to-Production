@@ -1,0 +1,14 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.10.11, pytest-9.1.1, pluggy-1.7.0
+rootdir: /Users/mingze/obsidian/AI infra/论文/2026/8-Practical Online KV Cache Compaction for LLM Agents：An Empirical Study/online-kv-timing
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 15 items
+
+tests/test_core.py ..............                                        [ 93%]
+tests/test_gpu_model.py s                                                [100%]
+
+- generated xml file: /Users/mingze/obsidian/AI infra/论文/2026/8-Practical Online KV Cache Compaction for LLM Agents：An Empirical Study/online-kv-timing/results/pytest.xml -
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_gpu_model.py:8: NOT RUN: CUDA required for real model test
+======================== 14 passed, 1 skipped in 0.70s =========================

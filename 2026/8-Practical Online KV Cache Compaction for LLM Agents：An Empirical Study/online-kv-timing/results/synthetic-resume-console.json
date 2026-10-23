@@ -1,0 +1,79 @@
+[
+  {
+    "policy": "A_boundary",
+    "n": 3,
+    "ok": 3,
+    "infeasible": 0,
+    "errors": 0,
+    "quality": null,
+    "mean_wall_seconds": 0.0014015973332182814,
+    "peak_kv_bytes": 11680,
+    "forced_count": 0
+  },
+  {
+    "policy": "delay1",
+    "n": 3,
+    "ok": 3,
+    "infeasible": 0,
+    "errors": 0,
+    "quality": null,
+    "mean_wall_seconds": 0.001092333336904024,
+    "peak_kv_bytes": 14308,
+    "forced_count": 0
+  },
+  {
+    "policy": "delay3",
+    "n": 3,
+    "ok": 3,
+    "infeasible": 0,
+    "errors": 0,
+    "quality": null,
+    "mean_wall_seconds": 0.0009957636648323387,
+    "peak_kv_bytes": 19564,
+    "forced_count": 0
+  },
+  {
+    "policy": "delay5",
+    "n": 3,
+    "ok": 3,
+    "infeasible": 0,
+    "errors": 0,
+    "quality": null,
+    "mean_wall_seconds": 0.0008451390021946281,
+    "peak_kv_bytes": 24820,
+    "forced_count": 0
+  },
+  {
+    "policy": "T",
+    "n": 3,
+    "ok": 3,
+    "infeasible": 0,
+    "errors": 0,
+    "quality": null,
+    "mean_wall_seconds": 0.0008750553242862225,
+    "peak_kv_bytes": 24820,
+    "forced_count": 0
+  },
+  {
+    "policy": "R",
+    "n": 3,
+    "ok": 3,
+    "infeasible": 0,
+    "errors": 0,
+    "quality": null,
+    "mean_wall_seconds": 0.0010778609915481259,
+    "peak_kv_bytes": 15768,
+    "forced_count": 0
+  },
+  {
+    "policy": "TR",
+    "n": 3,
+    "ok": 3,
+    "infeasible": 0,
+    "errors": 0,
+    "quality": null,
+    "mean_wall_seconds": 0.000884860996544982,
+    "peak_kv_bytes": 25404,
+    "forced_count": 0
+  }
+]

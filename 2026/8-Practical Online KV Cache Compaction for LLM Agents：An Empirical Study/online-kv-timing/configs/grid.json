@@ -1,0 +1,46 @@
+[
+  {
+    "T": {
+      "drift_threshold": 0.05,
+      "min_interval": 1,
+      "max_interval": 3
+    },
+    "R": {
+      "ratio_min": 0.1,
+      "ratio_max": 0.3
+    }
+  },
+  {
+    "T": {
+      "drift_threshold": 0.05,
+      "min_interval": 1,
+      "max_interval": 5
+    },
+    "R": {
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    }
+  },
+  {
+    "T": {
+      "drift_threshold": 0.15,
+      "min_interval": 1,
+      "max_interval": 3
+    },
+    "R": {
+      "ratio_min": 0.15,
+      "ratio_max": 0.3
+    }
+  },
+  {
+    "T": {
+      "drift_threshold": 0.15,
+      "min_interval": 1,
+      "max_interval": 5
+    },
+    "R": {
+      "ratio_min": 0.15,
+      "ratio_max": 0.4
+    }
+  }
+]

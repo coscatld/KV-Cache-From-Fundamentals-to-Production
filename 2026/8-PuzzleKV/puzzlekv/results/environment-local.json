@@ -1,0 +1,11 @@
+{
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "python": "3.10.11",
+  "torch": "2.13.0",
+  "cuda": null,
+  "cuda_available": false,
+  "gpu": null,
+  "triton": null,
+  "transformers": "5.20.2",
+  "bf16": null
+}

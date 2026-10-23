@@ -1,0 +1,113 @@
+{
+  "config": {
+    "backend": "synthetic",
+    "dataset": "data/tasks.json",
+    "seed": 42,
+    "peak_kv_bytes": 80000,
+    "synthetic_turns": 8
+  },
+  "dataset_hash": "c419f692f2cffc6302c46758294634e4bb248b539d5a4121708cf6e80f30128c",
+  "code_hash": "dc3cbb6725bdb30421236ceab65d70e3083310ec774ca8390c3e5757a4759660",
+  "policies": {
+    "A_boundary": {
+      "name": "boundary",
+      "delay": 1,
+      "ratio": 0.2,
+      "min_interval": 1,
+      "max_interval": 5,
+      "safety_fraction": 0.65,
+      "drift_threshold": 0.15,
+      "growth_threshold": 0.1,
+      "adaptive_ratio": false,
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    },
+    "delay1": {
+      "name": "fixed",
+      "delay": 1,
+      "ratio": 0.2,
+      "min_interval": 1,
+      "max_interval": 5,
+      "safety_fraction": 0.65,
+      "drift_threshold": 0.15,
+      "growth_threshold": 0.1,
+      "adaptive_ratio": false,
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    },
+    "delay3": {
+      "name": "fixed",
+      "delay": 3,
+      "ratio": 0.2,
+      "min_interval": 1,
+      "max_interval": 5,
+      "safety_fraction": 0.65,
+      "drift_threshold": 0.15,
+      "growth_threshold": 0.1,
+      "adaptive_ratio": false,
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    },
+    "delay5": {
+      "name": "fixed",
+      "delay": 5,
+      "ratio": 0.2,
+      "min_interval": 1,
+      "max_interval": 5,
+      "safety_fraction": 0.65,
+      "drift_threshold": 0.15,
+      "growth_threshold": 0.1,
+      "adaptive_ratio": false,
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    },
+    "T": {
+      "name": "adaptive",
+      "delay": 1,
+      "ratio": 0.2,
+      "min_interval": 1,
+      "max_interval": 5,
+      "safety_fraction": 0.65,
+      "drift_threshold": 0.15,
+      "growth_threshold": 0.1,
+      "adaptive_ratio": false,
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    },
+    "R": {
+      "name": "fixed",
+      "delay": 1,
+      "ratio": 0.2,
+      "min_interval": 1,
+      "max_interval": 5,
+      "safety_fraction": 0.65,
+      "drift_threshold": 0.15,
+      "growth_threshold": 0.1,
+      "adaptive_ratio": true,
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    },
+    "TR": {
+      "name": "adaptive",
+      "delay": 1,
+      "ratio": 0.2,
+      "min_interval": 1,
+      "max_interval": 5,
+      "safety_fraction": 0.65,
+      "drift_threshold": 0.15,
+      "growth_threshold": 0.1,
+      "adaptive_ratio": true,
+      "ratio_min": 0.1,
+      "ratio_max": 0.4
+    }
+  },
+  "split": "validation",
+  "environment": {
+    "python": "3.10.11",
+    "torch": "2.13.0",
+    "transformers": null,
+    "cuda": null,
+    "gpu": null
+  },
+  "run_hash": "8d7be6f0ab81c3480cb1187ca1ae05e98496b42b4fd8f0fd8e9aa7c0e4a50c94"
+}

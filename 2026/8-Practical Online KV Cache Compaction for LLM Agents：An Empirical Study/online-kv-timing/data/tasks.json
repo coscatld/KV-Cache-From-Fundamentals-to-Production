@@ -1,0 +1,154 @@
+[
+  {
+    "id": "dev-0",
+    "index": 0,
+    "split": "dev",
+    "question": "What is the code of station 0?",
+    "answers": [
+      "code-0"
+    ],
+    "corpus": [
+      {
+        "id": "s0",
+        "text": "Station 0 has code code-0."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  },
+  {
+    "id": "dev-1",
+    "index": 1,
+    "split": "dev",
+    "question": "What is the code of station 1?",
+    "answers": [
+      "code-1"
+    ],
+    "corpus": [
+      {
+        "id": "s1",
+        "text": "Station 1 has code code-1."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  },
+  {
+    "id": "validation-2",
+    "index": 2,
+    "split": "validation",
+    "question": "What is the code of station 2?",
+    "answers": [
+      "code-2"
+    ],
+    "corpus": [
+      {
+        "id": "s2",
+        "text": "Station 2 has code code-2."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  },
+  {
+    "id": "validation-3",
+    "index": 3,
+    "split": "validation",
+    "question": "What is the code of station 3?",
+    "answers": [
+      "code-3"
+    ],
+    "corpus": [
+      {
+        "id": "s3",
+        "text": "Station 3 has code code-3."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  },
+  {
+    "id": "validation-4",
+    "index": 4,
+    "split": "validation",
+    "question": "What is the code of station 4?",
+    "answers": [
+      "code-4"
+    ],
+    "corpus": [
+      {
+        "id": "s4",
+        "text": "Station 4 has code code-4."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  },
+  {
+    "id": "test-5",
+    "index": 5,
+    "split": "test",
+    "question": "What is the code of station 5?",
+    "answers": [
+      "code-5"
+    ],
+    "corpus": [
+      {
+        "id": "s5",
+        "text": "Station 5 has code code-5."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  },
+  {
+    "id": "test-6",
+    "index": 6,
+    "split": "test",
+    "question": "What is the code of station 6?",
+    "answers": [
+      "code-6"
+    ],
+    "corpus": [
+      {
+        "id": "s6",
+        "text": "Station 6 has code code-6."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  },
+  {
+    "id": "test-7",
+    "index": 7,
+    "split": "test",
+    "question": "What is the code of station 7?",
+    "answers": [
+      "code-7"
+    ],
+    "corpus": [
+      {
+        "id": "s7",
+        "text": "Station 7 has code code-7."
+      },
+      {
+        "id": "other",
+        "text": "Station other has code other."
+      }
+    ]
+  }
+]
