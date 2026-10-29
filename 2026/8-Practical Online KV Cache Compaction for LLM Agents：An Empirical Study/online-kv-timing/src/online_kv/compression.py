@@ -30,11 +30,14 @@ def te(segment,queries,ratio):
     keep=max(math.ceil(n*ratio),int(segment.protected.sum(-1).max()))
     logits=queries.float()@segment.kv[:,0].float().transpose(-1,-2)/math.sqrt(d)
     scores=logits.softmax(-1).square().mean(-2).sqrt()
+
     scores=scores.masked_fill(segment.protected,float("inf"))
     indices=scores.topk(keep,dim=-1).indices.sort(-1).values
+
     selected=segment.kv.gather(-2,indices[:,None,:,:,None].expand(l,2,h,keep,d)).contiguous()
     pos=segment.positions.gather(-1,indices).contiguous()
     prot=segment.protected.gather(-1,indices).contiguous()
+    
     return Segment(segment.turn,selected,pos,prot,True,True,segment.original_tokens)
 
 class Bank:
